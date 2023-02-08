@@ -9,7 +9,7 @@ from print_info import *
 class Card(ABC):
     # 用来指示是否在留牌阶段把它留下, 默认留下
     # 在 keep_in_hand 中返回
-    keep_in_hand_bool = True
+    keep_in_hand_bool = False #changed to false
 
     @classmethod
     def keep_in_hand(cls, state, hand_card_index):

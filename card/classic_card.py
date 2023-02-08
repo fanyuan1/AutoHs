@@ -262,3 +262,95 @@ class StormforgedAxe(WeaponCard):
                     return 2000,
 
         return cls.value,
+
+
+# 神圣惩击
+class HolySmiteClassic(SpellPointOppo):
+    wait_time = 2
+    # 加个bias,一是包含了消耗的水晶的代价，二是包含了消耗了手牌的代价
+    bias = -2
+
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+        spell_power = state.my_total_spell_power
+        damage = 2 + spell_power
+        best_delta_h = state.oppo_hero.delta_h_after_damage(damage)
+        best_oppo_index = -1
+
+        for oppo_index, oppo_minion in enumerate(state.oppo_minions):
+            if not oppo_minion.can_be_pointed_by_spell:
+                continue
+            temp_delta_h = oppo_minion.delta_h_after_damage(damage) + cls.bias ##classic dmg
+            if temp_delta_h > best_delta_h:
+                best_delta_h = temp_delta_h
+                best_oppo_index = oppo_index
+
+        return best_delta_h, best_oppo_index
+
+# 神圣新星
+class HolyNovaClassic(SpellNoPoint):
+    bias = -8
+
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+        spell_power = state.my_total_spell_power
+        damage = 2 + spell_power
+        damage = 2
+        return cls.bias + sum([minion.delta_h_after_damage(damage)
+                               for minion in state.oppo_minions])\
+                        + sum([minion.delta_h_after_heal(2)
+                               for minion in state.my_minions])\
+                        + state.my_hero.delta_h_after_heal(2)\
+                        + state.oppo_hero.delta_h_after_damage(damage),
+
+class ShadowWordPain(SpellPointOppo):
+    wait_time = 1.5
+    bias = -2
+
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+        best_oppo_index = -1
+        best_delta_h = 0
+
+        for oppo_index, oppo_minion in enumerate(state.oppo_minions):
+            if oppo_minion.attack < 4:
+                continue
+            if not oppo_minion.can_be_pointed_by_spell:
+                continue
+
+            tmp = oppo_minion.heuristic_val + cls.bias
+            if tmp > best_delta_h:
+                best_delta_h = tmp
+                best_oppo_index = oppo_index
+
+        return best_delta_h, best_oppo_index
+
+class PowerWordShield(SpellPointMine):
+    bias = 0
+
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+
+        try:
+            if state.my_minion_num == 0:
+                return -9999,
+            best_delta_h = 0
+            best_mine_index = -1
+
+            for my_index, my_minion in enumerate(state.my_minions):
+                if not my_minion.can_be_pointed_by_spell:
+                    continue
+
+                tmp = 0.5
+                # tmp = cls.bias + 3 + (my_minion.health + 1) / 4 + \
+                #       (my_minion.attack) / 2
+                if tmp >= best_delta_h: #right most minion gets the buff
+                    best_delta_h = tmp
+                    best_mine_index = my_index
+
+            return best_delta_h, best_mine_index
+        except:
+            return -9999,
+
+
+

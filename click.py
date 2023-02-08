@@ -207,10 +207,13 @@ def use_skill_point_mine(my_index, my_num):
 
     if my_index < 0:
         choose_my_hero()
+        print('***** i tried healing my hero ******')
     else:
         choose_my_minion(my_index, my_num)
+        print('***** I tried to heal my minion *****')
 
-    cancel_click()
+    choose_my_hero()
+    ##cancel_click()
 
 def use_skill_point_oppo(my_index, my_num):
     click_skill()

@@ -13,6 +13,7 @@ ID2CARD_DICT = {
     "BALLISTA_SHOT": BallistaShot,
     "DEMON_CLAWS" : DemonClaws,
     "FIRE_BLAST" : Fireblast,
+    "GHOUL_CHARGE" : GhoulCharge, 
 
     # 标准模式-牧师
     "YOP_032": ArmorVendor,  # 护甲商贩
@@ -39,6 +40,33 @@ ID2CARD_DICT = {
     "WC_030": MutanusTheDevourer,  # 吞噬者穆坦努斯
     "BT_198": SoulMirror,  # 灵魂之镜
     "DMF_053": BloodOfGhuun,  # 戈霍恩之血
+    "CS2_234" : ShadowWordPain,
+    "CS2_004" : PowerWordShield,
+    #newest expansion
+    "RLK_707" : GraveStrength,
+    "RLK_039" : PlaguedGrain,
+    "RLK_118" : TombGuardians,
+    "RLK_048" : MagicShell,
+
+    #astalor bloodsworn (minionpointoppo)
+    "RLK_222" : Astalor,
+    "RLK_222t1" : Astalor1,
+    "RLK_222t2" : Astalor2,
+
+    #bone flinger (minionpointoppo)
+    "RLK_123" : BoneFlinger,
+    #plague strike (spellpointoppo)
+    "RLK_018" : PlagueStrike,
+    #vrykul necrolyte (minionpointmine)
+    "RLK_867" : VrykulNecrolyte,
+    #dark transformation (spellpointmine)
+    "RLK_057" : DarkTransformation,
+    #priest of the deceased (needs infused)
+    "REV_956" : PriestDeceased,
+    "REV_956t" : PriestDeceasedt,
+    "SCH_283" : ManaFeederHP,
+    "RLK_753" : BoneDigger,
+    "RLK_061" : BattlefieldNecromancer,
 
     # 经典模式
     "VAN_CS2_042": FireElemental,
@@ -56,4 +84,13 @@ ID2CARD_DICT = {
     "VAN_NEW1_041": StampedingKodo,
     "VAN_EX1_590": BloodKnight,
     "VAN_EX1_247": StormforgedAxe,
+    "VAN_CS1_112": HolyNovaClassic,
+    "VAN_HERO_09bp" : LesserHeal,
+    "VAN_CS1_130" : HolySmiteClassic,
+    "VAN_CS2_234" : ShadowWordPain,
+    "VAN_EX1_622" : ShadowWordDeath,
+    "VAN_CS2_004" : PowerWordShield,
+    "EX1_014t" : PowerWordShield,
+    "EX1_014te" : PowerWordShield,
+
 }

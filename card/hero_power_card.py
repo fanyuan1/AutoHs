@@ -82,4 +82,16 @@ class Fireblast(HeroPowerCard):
         print('[火焰冲击][use_with_arg]')
         click.use_skill_point_oppo(args[0], len(state.oppo_minions))
         time.sleep(1)
-        
+
+class GhoulCharge(HeroPowerCard):
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num >= 7:
+            return -1,-1
+        else:
+            return 1.5,-1
+
+    @classmethod
+    def use_with_arg(cls, state, card_index, *args):
+        click.use_skill_no_point()
+        time.sleep(1)

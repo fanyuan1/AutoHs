@@ -93,6 +93,14 @@ class LogState:
                self.my_entity.query_tag("RESOURCES_USED")
 
     @property
+    def my_corpses(self):
+        return int(self.my_entity.query_tag("CORPSES"))
+
+    @property
+    def my_minion_death_turn(self):
+        return int(self.my_entity.query_tag("NUM_FRIENDLY_MINIONS_THAT_DIED_THIS_TURN")) >= 1
+
+    @property
     def game_step(self):
         return self.game_entity.query_tag("STEP")
 
@@ -206,6 +214,7 @@ class CardEntity(Entity):
                 exhausted=int(self.query_tag("EXHAUSTED")),
                 cant_attack=int(self.query_tag("CANT_ATTACK")),
                 num_turns_in_play=int(self.query_tag("NUM_TURNS_IN_PLAY")),
+                race=self.query_tag("CARDRACE"),
             )
         elif self.cardtype == "SPELL":
             return StrategySpell(

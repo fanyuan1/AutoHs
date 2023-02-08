@@ -71,7 +71,7 @@ class StrategyMinion(StrategyEntity):
                  charge=0, rush=0,
                  attackable_by_rush=0, frozen=0,
                  dormant=0, untouchable=0, immune=0,
-                 cant_attack=0, exhausted=1, num_turns_in_play=1):
+                 cant_attack=0, exhausted=1, num_turns_in_play=1, race="NONE"):
         super().__init__(card_id, zone, zone_pos,
                          current_cost, overload, is_mine)
         self.attack = attack
@@ -110,6 +110,8 @@ class StrategyMinion(StrategyEntity):
         if self.rush and not self.charge \
                 and self.num_turns_in_play < 2:
             self.exhausted = 1
+        #new
+        self.race = race
 
     def __str__(self):
         temp = f"[{self.zone_pos}] {self.name} " \
@@ -281,6 +283,9 @@ class StrategyMinion(StrategyEntity):
         temp_minion = copy.copy(self)
         temp_minion.get_heal(heal)
         return temp_minion.heuristic_val - self.heuristic_val
+
+    def get_race(self):
+        return self.race
 
 
 class StrategyWeapon(StrategyEntity):
@@ -458,5 +463,6 @@ class StrategyHeroPower(StrategyEntity):
             return ID2CARD_DICT["FIRE_BLAST"]
         if self.name == "恶魔之爪":
             return ID2CARD_DICT["DEMON_CLAWS"]
-
+        if self.name == "食尸鬼冲锋":
+            return ID2CARD_DICT["GHOUL_CHARGE"]
         return None

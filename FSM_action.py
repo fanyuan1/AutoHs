@@ -188,10 +188,11 @@ def ChoosingCardAction():
 
             if detail_card is None:
                 should_keep_in_hand = \
-                    my_hand_card.current_cost <= REPLACE_COST_BAR
+                    (my_hand_card.current_cost <= REPLACE_COST_BAR)
+            elif detail_card.keep_in_hand(strategy_state, my_hand_index):
+                should_keep_in_hand = True
             else:
-                should_keep_in_hand = \
-                    detail_card.keep_in_hand(strategy_state, my_hand_index)
+                should_keep_in_hand = (my_hand_card.current_cost <= REPLACE_COST_BAR)
 
             if not has_print:
                 debug_print(f"手牌-[{my_hand_index}]({my_hand_card.name})"
@@ -466,8 +467,14 @@ def AutoHS_automata():
             time.sleep(1)
             # if counter > 60 * 30:
 
-        
-        Battling()
+        try:
+            if log_state.game_num_turns_in_play < 1:
+                ChoosingCardAction()
+            else:
+            	Battling()
+        except:
+        	Battling()
+        	
         time.sleep(1)
 
 

@@ -7,6 +7,7 @@ from card.basic_card import MinionNoPoint
 from log_state import *
 from log_op import *
 from strategy_entity import *
+from constants import constants
 
 
 class StrategyState:
@@ -29,6 +30,10 @@ class StrategyState:
         self.my_total_mana = int(log_state.my_entity.query_tag("RESOURCES"))
         self.my_used_mana = int(log_state.my_entity.query_tag("RESOURCES_USED"))
         self.my_temp_mana = int(log_state.my_entity.query_tag("TEMP_RESOURCES"))
+
+        self.my_corpses = int(log_state.my_entity.query_tag("CORPSES") or 0)
+        self.my_minion_death_turn = \
+        int(log_state.my_entity.query_tag("NUM_FRIENDLY_MINIONS_THAT_DIED_THIS_TURN") or 0) >= 1
 
         for entity in log_state.entity_dict.values():
             if entity.query_tag("ZONE") == "HAND":
@@ -302,8 +307,15 @@ class StrategyState:
                 oppo_index = oppo_minion.zone_pos - 1
 
                 tmp_delta_h = 0
-                tmp_delta_h -= my_minion.delta_h_after_damage(oppo_minion.attack)
+
+                if my_minion.card_id != "HERO_11bpt":
+                    #trade in DK hero power cost 0
+                    tmp_delta_h -= my_minion.delta_h_after_damage(oppo_minion.attack)
                 tmp_delta_h += oppo_minion.delta_h_after_damage(my_minion.attack)
+
+                #add some incentives to attack into taunts
+                if oppo_minion.taunt and not oppo_minion.stealth:
+                	tmp_delta_h += 100
 
                 debug_print(f"攻击决策：[{my_index}]({my_minion.name})->"
                             f"[{oppo_index}]({oppo_minion.name}) "
@@ -378,6 +390,30 @@ class StrategyState:
         best_index = -2
         best_args = []
 
+        # playing even DK
+        if EVEN_DECK and self.my_total_mana > 1 and self.my_total_mana%2 == 1 and \
+                not self.my_hero_power.exhausted and self.my_minion_num < 7:
+            hero_power = self.my_detail_hero_power
+
+
+            try:
+                delta_h, *args = hero_power.best_h_and_arg(self, -1)
+            except:
+                delta_h = 1
+                args = []
+                pass
+
+            if delta_h > best_delta_h:
+                best_index = -1
+                best_args = args
+            
+            debug_print(f"技能-[{self.my_hero_power.name}]"
+                        f"delta_h: {delta_h} "
+                        f"*args: {args}")
+            return best_index, best_args
+        else:
+            debug_print(f"技能-[ ]({self.my_hero_power.name}) 跳过")
+
         # 考虑使用手牌
         for hand_card_index, hand_card in enumerate(self.my_hand_cards):
             debug_print(f"卡牌-[{hand_card_index}]({hand_card.name})")
@@ -408,7 +444,7 @@ class StrategyState:
                 best_args = args
 
         # 考虑使用英雄技能
-        if self.my_last_mana >= 2 and \
+        if self.my_last_mana >= HERO_POWER_COST and \
                 not self.my_hero_power.exhausted:
             hero_power = self.my_detail_hero_power
 
@@ -416,11 +452,9 @@ class StrategyState:
             try:
                 delta_h, *args = hero_power.best_h_and_arg(self, -1)
             except:
+                delta_h = 1
+                args = []
                 pass
-            
-
-            delta_h = 0
-            args = []
 
             if delta_h > best_delta_h:
                 best_index = -1
