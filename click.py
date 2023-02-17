@@ -50,7 +50,13 @@ def choose_my_hero():
     left_click(960, 850)
 
 
-def choose_opponent_minion(oppo_index, oppo_num):
+def choose_opponent_minion(oppo_index, oppo_num, oppo_locations_pos):
+    for i in oppo_locations_pos:
+        i -= 1 #convert to index
+        if oppo_index >= i:
+            oppo_index += 1
+    oppo_num += len(oppo_locations_pos)
+
     rand_sleep(OPERATE_INTERVAL)
     x = 960 - (oppo_num - 1) * 70 + oppo_index * 140
     y = 400
@@ -207,28 +213,26 @@ def use_skill_point_mine(my_index, my_num):
 
     if my_index < 0:
         choose_my_hero()
-        print('***** i tried healing my hero ******')
     else:
         choose_my_minion(my_index, my_num)
-        print('***** I tried to heal my minion *****')
 
     choose_my_hero()
     ##cancel_click()
 
-def use_skill_point_oppo(my_index, my_num):
+def use_skill_point_oppo(my_index, my_num, oppo_locations_pos):
     click_skill()
     choose_my_hero()
     if my_index < 0 or len(my_num) == 0:
         choose_oppo_hero()
     else:
-        choose_opponent_minion(my_index, my_num)
+        choose_opponent_minion(my_index, my_num, oppo_locations_pos)
 
     cancel_click()    
 
 
-def minion_beat_minion(mine_index, mine_number, oppo_index, oppo_num):
+def minion_beat_minion(mine_index, mine_number, oppo_index, oppo_num, oppo_locations_pos):
     choose_my_minion(mine_index, mine_number)
-    choose_opponent_minion(oppo_index, oppo_num)
+    choose_opponent_minion(oppo_index, oppo_num, oppo_locations_pos)
     cancel_click()
 
 
@@ -238,9 +242,9 @@ def minion_beat_hero(mine_index, mine_number):
     cancel_click()
 
 
-def hero_beat_minion(oppo_index, oppo_num):
+def hero_beat_minion(oppo_index, oppo_num, oppo_locations_pos):
     choose_my_hero()
-    choose_opponent_minion(oppo_index, oppo_num)
+    choose_opponent_minion(oppo_index, oppo_num, oppo_locations_pos)
     cancel_click()
 
 

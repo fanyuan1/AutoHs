@@ -245,6 +245,10 @@ class StrategyMinion(StrategyEntity):
         if self.zone == "HAND":
             if self.rush or self.attack:
                 h_val += self.attack / 4
+        
+        if self.zone == "HAND":
+            if self.charge or self.attack:
+                h_val += self.attack / 2 #not sure how i should value charge
 
         h_val *= CRITICAL_MINION.get(self.card_id, 1)
 
@@ -287,6 +291,11 @@ class StrategyMinion(StrategyEntity):
     def get_race(self):
         return self.race
 
+    def delta_h_after_buff(self, attack_buff, health_buff):
+        temp_minion = copy.copy(self)
+        temp_minion.attack += attack_buff
+        temp_minion.max_health += health_buff
+        return temp_minion.heuristic_val - self.heuristic_val
 
 class StrategyWeapon(StrategyEntity):
     def __init__(self, card_id, zone, zone_pos,
@@ -374,14 +383,12 @@ class StrategyHero(StrategyEntity):
     def heuristic_val(self):
         if self.health <= 0:
             return -10000
-        if self.health <= 5:
-            return self.health
         if self.health <= 10:
-            return 5 + (self.health - 5) * 0.6
+            return self.health
         if self.health <= 20:
-            return 8 + (self.health - 10) * 0.4
+            return 10 + (self.health - 10) * 0.8
         else:
-            return 12 + (self.health - 20) * 0.3
+            return 18 + (self.health - 20) * 0.6
 
     @property
     def can_attack(self):

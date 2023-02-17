@@ -1,0 +1,11 @@
+
+*.pyc
+log/debug_log.txt
+log/game_state_snapshot.txt
+cards.json
+log/debug_log.txt
+log/debug_log_backup.txt
+log/game_state_snapshot.txt
+log/game_state_snapshot.txt
+cards.json
+log/debug_log.txt

@@ -1,10 +1,10 @@
 # 你的Power.log的路径, 应该在你的炉石安装目录下的`Logs/`文件夹中, 这里放的是我的路径
 # ** 一定要修改成自己电脑上的路径 **
-HEARTHSTONE_POWER_LOG_PATH = "path to /Power.log"
+HEARTHSTONE_POWER_LOG_PATH = "PATHTO/Power.log"
 
 # 你的炉石用户名, 注意英文标点符号'#', 把后面的数字也带上
 # 可以输入中文
-YOUR_NAME = "booboo#12345"
+YOUR_NAME = ""
 
 # 关于控制台信息打印的设置
 DEBUG_PRINT = True
@@ -30,11 +30,18 @@ EMOJ_RATIO = 0
 OPPO_DELTA_H_FACTOR = 1.2
 MY_DELTA_H_FACTOR = 1
 
-# 对于没有单独建一个类去描述的卡牌, 如果它的法力值花费大于这个值,
-# 就在流留牌阶段被换掉
+# EVEN DK
+# AAEBAfHhBATN9AKvjgT47ATipAUN9Q37zgOL1QPJ4gTw4wSN5ASR5ASS5ASP5gTV8QSF9gTdggXixQUA
 REPLACE_COST_BAR = 2
 HERO_POWER_COST = 1 #2
 EVEN_DECK = True
+
+# # Classic ZOO
+# # AAEDAf0GArahBJajBA77lQSzlgTVlgTtlgSuoQSyoQS9oQTuoQSdogSjogS7ogTDowS5oQS0oQQA
+# REPLACE_COST_BAR = 1
+# HERO_POWER_COST = 2
+# EVEN_DECK = False
+
 
 OPERATE_INTERVAL = 0.2
 STATE_CHECK_INTERVAL = 1

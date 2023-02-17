@@ -67,7 +67,7 @@ class SpellPointOppo(SpellCard):
         oppo_index = args[0]
         click.choose_card(card_index, state.my_hand_card_num)
         if oppo_index >= 0:
-            click.choose_opponent_minion(oppo_index, state.oppo_minion_num)
+            click.choose_opponent_minion(oppo_index, state.oppo_minion_num, state.oppo_locations_pos)
         else:
             click.choose_oppo_hero()
         click.cancel_click()
@@ -106,11 +106,11 @@ class MinionCard(Card):
         if cls.value != 0:
             return cls.value, state.my_minion_num
         else:
-            # 费用越高的应该越厉害吧
+            # making this closer to heuristic value
             hand_card = state.my_hand_cards[hand_card_index]
-            delta_h = hand_card.current_cost / 2 + 1
+            delta_h = hand_card.current_cost * 2 + 1 #using standard attack/hp line at each mana cost level
 
-            if state.my_hero.health <= 10:# and hand_card.taunt:
+            if state.my_hero.health <= 10 and hand_card.taunt: #prioritize taunt if hp is low
                 delta_h *= 1.5
 
             return delta_h, state.my_minion_num  # 默认放到最右边
@@ -160,7 +160,7 @@ class MinionPointOppo(MinionCard):
         click.choose_card(card_index, state.my_hand_card_num)
         click.put_minion(gap_index, state.my_minion_num)
         if oppo_index >= 0:
-            click.choose_opponent_minion(oppo_index, state.oppo_minion_num)
+            click.choose_opponent_minion(oppo_index, state.oppo_minion_num, state.oppo_locations_pos)
         else:
             click.choose_oppo_hero()
         click.cancel_click()
@@ -214,7 +214,7 @@ class HeroPowerCard(Card):
 class Coin(SpellNoPoint):
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        best_delta_h = 0
+        best_delta_h = -0.1
 
         for another_index, hand_card in enumerate(state.my_hand_cards):
             delta_h = 0

@@ -17,7 +17,7 @@ quitting_flag = False
 log_state = LogState()
 log_iter = log_iter_func(HEARTHSTONE_POWER_LOG_PATH)
 choose_hero_count = 0
-
+pyautogui.FAILSAFE = False
 
 def init():
     global log_state, log_iter, choose_hero_count
@@ -214,12 +214,13 @@ def ChoosingCardAction():
 battle_counter = 0
 won_battle_counter = 0
 lost_battle_counter = 0
+error_msg_sent = False
 
 def Battling():
     global win_count
     global log_state
     global InBattle
-    global battle_counter, won_battle_counter, lost_battle_counter
+    global battle_counter, won_battle_counter, lost_battle_counter, error_msg_sent
 
     print_out()
 
@@ -235,10 +236,14 @@ def Battling():
 
         ok = update_log_state()
         if not ok:
+            if not error_msg_sent:
+                error_msg_sent = True
+                SMS.sendMessage("FSM error: log state not okay")
             return FSM_ERROR
 
         if log_state.is_end:
             win_flag = False
+            error_msg_sent = False #reset after each game finishes
             
 
             if log_state.my_entity.query_tag("PLAYSTATE") == "WON":
@@ -268,6 +273,9 @@ def Battling():
             not_mine_count += 1
             if not_mine_count >= 400:
                 warn_print("Time out in Opponent's turn")
+                if not error_msg_sent:
+                    error_msg_sent = True
+                    SMS.sendMessage("FSM error: time out during opponent's turn")
                 return FSM_ERROR
 
             continue
@@ -293,6 +301,9 @@ def Battling():
 
         if mine_count >= 20:
             if mine_count >= 40:
+                if not error_msg_sent:
+                    error_msg_sent = True
+                    SMS.sendMessage("FSM error: mine count over 40")
                 return FSM_ERROR
             click.end_turn()
             click.commit_error_report()
@@ -301,7 +312,7 @@ def Battling():
 
         debug_print("-" * 60)
         strategy_state = StrategyState(log_state)
-        my_minion_len = len(strategy_state.my_minions)
+        # my_minion_len = len(strategy_state.my_minions)
         strategy_state.debug_print_out()
 
         # 考虑要不要出牌
@@ -309,13 +320,13 @@ def Battling():
 
         # index == -1 代表使用技能, -2 代表不出牌
         # if index != -2 and random.random() < 0.5:
-        if index != -2 and my_minion_len < 7:
+        if index != -2: # and my_minion_len < 7:
             strategy_state.use_best_entity(index, args)
             continue
 
-        else:
+        # else:
         # 如果不出牌, 考虑随从怎么打架
-            my_index, oppo_index = strategy_state.get_best_attack_target()
+        my_index, oppo_index = strategy_state.get_best_attack_target()
 
         # my_index == -1代表英雄攻击, -2 代表不攻击
         if my_index != -2:
@@ -458,23 +469,26 @@ def AutoHS_automata():
         #     FSM_state = get_screen.get_state()
         # FSM_state = FSM_dispatch(FSM_state)
 
-        counter = 1
+        counter = 0
+
         while not InBattle:
             pyclick([1400, 900])    # start
             pyclick([953, 644])     # error when loading game
             update_log_state()
-            counter += 1
             time.sleep(1)
-            # if counter > 60 * 30:
+            counter += 1
+            if counter >= 300:
+                SMS.sendMessage("Over 5 minutes looking for games")
+                break
 
         try:
             if log_state.game_num_turns_in_play < 1:
                 ChoosingCardAction()
             else:
-            	Battling()
+                Battling()
         except:
-        	Battling()
-        	
+            Battling()
+        
         time.sleep(1)
 
 

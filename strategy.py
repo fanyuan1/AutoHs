@@ -18,6 +18,9 @@ class StrategyState:
         self.my_hand_cards = []
         self.my_graveyard = []
 
+        self.oppo_locations_pos = []
+        self.my_locations_pos = []
+
         self.my_hero = None
         self.my_hero_power = None
         self.can_use_power = False
@@ -71,6 +74,12 @@ class StrategyState:
                         self.my_weapon = weapon
                     else:
                         self.oppo_weapon = weapon
+                
+                elif entity.cardtype == "LOCATION":
+                    if log_state.is_my_entity(entity):
+                        self.my_locations_pos.append(int(entity.zone_pos_test))
+                    else:
+                        self.oppo_locations_pos.append(int(entity.zone_pos_test))
 
             elif entity.zone == "GRAVEYARD":
                 if log_state.is_my_entity(entity):
@@ -81,6 +90,7 @@ class StrategyState:
         self.my_minions.sort(key=lambda temp: temp.zone_pos)
         self.oppo_minions.sort(key=lambda temp: temp.zone_pos)
         self.my_hand_cards.sort(key=lambda temp: temp.zone_pos)
+        self.oppo_locations_pos.sort()
 
     def debug_print_battlefield(self):
         if not DEBUG_PRINT:
@@ -240,6 +250,7 @@ class StrategyState:
             sys.exit(-1)
 
     def fight_between(self, oppo_index, my_index):
+        #not used??
         oppo_minion = self.oppo_minions[oppo_index]
         my_minion = self.my_minions[my_index]
 
@@ -304,18 +315,28 @@ class StrategyState:
                     min_attack = 999
 
             for oppo_minion in touchable_oppo_minions:
-                oppo_index = oppo_minion.zone_pos - 1
+                #take care of locations
+                shift = 0
+                for i in self.oppo_locations_pos:
+                    if oppo_minion.zone_pos > i:
+                        shift -= 1
+
+                oppo_index = oppo_minion.zone_pos + shift - 1
 
                 tmp_delta_h = 0
 
                 if my_minion.card_id != "HERO_11bpt":
                     #trade in DK hero power cost 0
-                    tmp_delta_h -= my_minion.delta_h_after_damage(oppo_minion.attack)
+                    if oppo_minion.poisonous:
+                        tmp_delta_h -= my_minion.delta_h_after_damage(999)
+                        #dont trade big minions into poisonous...
+                    else:
+                        tmp_delta_h -= my_minion.delta_h_after_damage(oppo_minion.attack)
                 tmp_delta_h += oppo_minion.delta_h_after_damage(my_minion.attack)
 
                 #add some incentives to attack into taunts
                 if oppo_minion.taunt and not oppo_minion.stealth:
-                	tmp_delta_h += 100
+                    tmp_delta_h += 100
 
                 debug_print(f"攻击决策：[{my_index}]({my_minion.name})->"
                             f"[{oppo_index}]({oppo_minion.name}) "
@@ -336,9 +357,22 @@ class StrategyState:
                                 f"[-1]({self.oppo_hero.name}) "
                                 f"斩杀了")
                     return -1, -1
+                else:
+                    tmp_delta_h = 0
+                    tmp_delta_h += self.oppo_hero.delta_h_after_damage(self.my_hero.attack)
+                    if tmp_delta_h > max_delta_h_val:
+                        max_delta_h_val = tmp_delta_h
+                        max_my_index = -1
+                        max_oppo_index = -1
 
             for oppo_minion in touchable_oppo_minions:
-                oppo_index = oppo_minion.zone_pos - 1
+                #take care of locations
+                shift = 0
+                for i in self.oppo_locations_pos:
+                    if oppo_minion.zone_pos > i:
+                        shift -= 1
+
+                oppo_index = oppo_minion.zone_pos + shift - 1
 
                 tmp_delta_h = 0
                 tmp_delta_h += oppo_minion.delta_h_after_damage(self.my_hero.attack)
@@ -350,7 +384,7 @@ class StrategyState:
                             f"[{oppo_index}]({oppo_minion.name}) "
                             f"delta_h_val: {tmp_delta_h}")
 
-                if tmp_delta_h >= max_delta_h_val:
+                if tmp_delta_h > max_delta_h_val:
                     max_delta_h_val = tmp_delta_h
                     max_my_index = -1
                     max_oppo_index = oppo_index
@@ -365,13 +399,14 @@ class StrategyState:
             if oppo_index == -1:
                 click.hero_beat_hero()
             else:
-                click.hero_beat_minion(oppo_index, self.oppo_minion_num)
+                click.hero_beat_minion(oppo_index, self.oppo_minion_num, self.oppo_locations_pos)
         else:
             if oppo_index == -1:
                 click.minion_beat_hero(my_index, self.my_minion_num)
             else:
                 click.minion_beat_minion(my_index, self.my_minion_num,
-                                         oppo_index, self.oppo_minion_num)
+                                         oppo_index, self.oppo_minion_num,
+                                         self.oppo_locations_pos)
 
     def copy_new_one(self):
         # TODO: 有必要deepcopy吗
@@ -386,7 +421,7 @@ class StrategyState:
 
     def best_h_index_arg(self):
         debug_print()
-        best_delta_h = -1   
+        best_delta_h = 0   
         best_index = -2
         best_args = []
 
@@ -399,11 +434,12 @@ class StrategyState:
             try:
                 delta_h, *args = hero_power.best_h_and_arg(self, -1)
             except:
-                delta_h = 1
+                delta_h = 2
                 args = []
                 pass
 
             if delta_h > best_delta_h:
+                best_delta_h = best_delta_h
                 best_index = -1
                 best_args = args
             
@@ -411,6 +447,30 @@ class StrategyState:
                         f"delta_h: {delta_h} "
                         f"*args: {args}")
             return best_index, best_args
+        else:
+            debug_print(f"技能-[ ]({self.my_hero_power.name}) 跳过")
+        
+        # 考虑使用英雄技能
+        if self.my_last_mana >= HERO_POWER_COST and \
+                not self.my_hero_power.exhausted:
+            hero_power = self.my_detail_hero_power
+
+
+            try:
+                delta_h, *args = hero_power.best_h_and_arg(self, -1)
+            except:
+                delta_h = 2 #assuming hero power is worth 2, rather play 1 drop
+                args = []
+                pass
+
+            if delta_h > best_delta_h:
+                best_delta_h = best_delta_h
+                best_index = -1
+                best_args = args
+            
+            debug_print(f"技能-[{self.my_hero_power.name}]"
+                        f"delta_h: {delta_h} "
+                        f"*args: {args}")
         else:
             debug_print(f"技能-[ ]({self.my_hero_power.name}) 跳过")
 
@@ -442,29 +502,6 @@ class StrategyState:
                 best_delta_h = delta_h
                 best_index = hand_card_index
                 best_args = args
-
-        # 考虑使用英雄技能
-        if self.my_last_mana >= HERO_POWER_COST and \
-                not self.my_hero_power.exhausted:
-            hero_power = self.my_detail_hero_power
-
-
-            try:
-                delta_h, *args = hero_power.best_h_and_arg(self, -1)
-            except:
-                delta_h = 1
-                args = []
-                pass
-
-            if delta_h > best_delta_h:
-                best_index = -1
-                best_args = args
-            
-            debug_print(f"技能-[{self.my_hero_power.name}]"
-                        f"delta_h: {delta_h} "
-                        f"*args: {args}")
-        else:
-            debug_print(f"技能-[ ]({self.my_hero_power.name}) 跳过")
 
         debug_print(f"决策结果: best_delta_h:{best_delta_h}, "
                     f"best_index:{best_index}, best_args:{best_args}")
@@ -523,4 +560,5 @@ if __name__ == "__main__":
                     click.minion_beat_hero(mine_index, strategy_state.my_minion_num)
                 else:
                     click.minion_beat_minion(mine_index, strategy_state.my_minion_num,
-                                             oppo_index, strategy_state.oppo_minion_num)
+                                             oppo_index, strategy_state.oppo_minion_num,
+                                             strategy_state.oppo_locations_pos)

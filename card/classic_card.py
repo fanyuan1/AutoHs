@@ -4,7 +4,7 @@ from card.basic_card import *
 # 闪电箭
 class LightingBolt(SpellPointOppo):
     spell_type = SPELL_POINT_OPPO
-    bias = -4
+    bias = -2
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
@@ -26,7 +26,7 @@ class LightingBolt(SpellPointOppo):
 
 # 呱
 class Hex(SpellPointOppo):
-    bias = -6
+    bias = -5
     keep_in_hand_bool = False
 
     @classmethod
@@ -49,7 +49,7 @@ class Hex(SpellPointOppo):
 
 # 闪电风暴
 class LightningStorm(SpellNoPoint):
-    bias = -10
+    bias = -8 #kills around 3-4 minions
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
@@ -65,7 +65,7 @@ class LightningStorm(SpellNoPoint):
 
 # TC130
 class MindControlTech(MinionNoPoint):
-    value = 0.2
+    value = 0.1 #between 1 drop and 2 drop, 
     keep_in_hand_bool = False
 
     @classmethod
@@ -75,30 +75,30 @@ class MindControlTech(MinionNoPoint):
         else:
             h_sum = sum([minion.heuristic_val for minion in state.oppo_minions])
             h_sum /= state.oppo_minion_num
-            return cls.value + h_sum * 2,
+            return cls.value + h_sum + 6,
 
 
 # 野性狼魂
 class FeralSpirit(SpellNoPoint):
-    value = 2.4
+    value = 8 #between 3 and 4 drop
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        if state.my_minion_num >= 7:
-            return -1, 0
+        if state.my_minion_num >= 6:
+            return 3, 0
         else:
             return cls.value, 0
 
 
 # 碧蓝幼龙
 class AzureDrake(MinionNoPoint):
-    value = 3.5
+    value = 11 ## 4+4+2+1
     keep_in_hand_bool = False
 
 
 # 奥妮克希亚
 class Onyxia(MinionNoPoint):
-    value = 10
+    value = 20
     keep_in_hand_bool = False
 
 
@@ -108,14 +108,14 @@ class FireElemental(MinionPointOppo):
 
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        best_h = 3 + state.oppo_hero.delta_h_after_damage(3)
+        best_h = 11 + state.oppo_hero.delta_h_after_damage(3)
         best_oppo_index = -1
 
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_minion:
                 continue
 
-            delta_h = 3 + oppo_minion.delta_h_after_damage(3)
+            delta_h = 11 + oppo_minion.delta_h_after_damage(3)
             if delta_h > best_h:
                 best_h = delta_h
                 best_oppo_index = oppo_index
@@ -128,14 +128,14 @@ class ElvenArcher(MinionPointOppo):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
         # 不能让她下去点脸, 除非对面快死了
-        best_h = -0.8 + state.oppo_hero.delta_h_after_damage(1)
+        best_h = 1 + state.oppo_hero.delta_h_after_damage(1)
         best_oppo_index = -1
 
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_minion:
                 continue
 
-            delta_h = -0.5 + oppo_minion.delta_h_after_damage(1)
+            delta_h = 1 + oppo_minion.delta_h_after_damage(1)
             if delta_h > best_h:
                 best_h = delta_h
                 best_oppo_index = oppo_index
@@ -147,13 +147,13 @@ class ElvenArcher(MinionPointOppo):
 class EarthenRingFarseer(MinionPointMine):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        best_h = 0.2 + state.my_hero.delta_h_after_heal(3)
+        best_h = 6 + state.my_hero.delta_h_after_heal(3)
         if state.my_hero.health <= 5:
-            best_h += 4
+            best_h += 3
         best_my_index = -1
 
         for my_index, my_minion in enumerate(state.my_minions):
-            delta_h = -0.5 + my_minion.delta_h_after_heal(3)
+            delta_h = 6 + my_minion.delta_h_after_heal(3)
             if delta_h > best_h:
                 best_h = delta_h
                 best_my_index = my_index
@@ -167,7 +167,7 @@ class Abomination(MinionNoPoint):
 
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        h_sum = 0
+        h_sum = 8
         for oppo_minion in state.oppo_minions:
             h_sum += oppo_minion.delta_h_after_damage(2)
         for my_minion in state.my_minions:
@@ -184,7 +184,7 @@ class StampedingKodo(MinionNoPoint):
 
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        h_sum = 2
+        h_sum = 8
         temp_sum = 0
         temp_count = 0
 
@@ -204,7 +204,7 @@ class BloodKnight(MinionNoPoint):
 
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        h_sum = 1
+        h_sum = 4 # can consider keeping
 
         for oppo_minion in state.oppo_minions:
             if oppo_minion.divine_shield:
@@ -267,7 +267,6 @@ class StormforgedAxe(WeaponCard):
 # 神圣惩击
 class HolySmiteClassic(SpellPointOppo):
     wait_time = 2
-    # 加个bias,一是包含了消耗的水晶的代价，二是包含了消耗了手牌的代价
     bias = -2
 
     @classmethod
@@ -280,16 +279,16 @@ class HolySmiteClassic(SpellPointOppo):
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_spell:
                 continue
-            temp_delta_h = oppo_minion.delta_h_after_damage(damage) + cls.bias ##classic dmg
+            temp_delta_h = oppo_minion.delta_h_after_damage(damage)
             if temp_delta_h > best_delta_h:
                 best_delta_h = temp_delta_h
                 best_oppo_index = oppo_index
 
-        return best_delta_h, best_oppo_index
+        return best_delta_h + cls.bias, best_oppo_index
 
 # 神圣新星
 class HolyNovaClassic(SpellNoPoint):
-    bias = -8
+    bias = -6
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
@@ -303,7 +302,9 @@ class HolyNovaClassic(SpellNoPoint):
                         + state.my_hero.delta_h_after_heal(2)\
                         + state.oppo_hero.delta_h_after_damage(damage),
 
+## not working properly
 class ShadowWordPain(SpellPointOppo):
+
     wait_time = 1.5
     bias = -2
 
@@ -326,8 +327,7 @@ class ShadowWordPain(SpellPointOppo):
         return best_delta_h, best_oppo_index
 
 class PowerWordShield(SpellPointMine):
-    bias = 0
-
+    
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
 
@@ -340,11 +340,8 @@ class PowerWordShield(SpellPointMine):
             for my_index, my_minion in enumerate(state.my_minions):
                 if not my_minion.can_be_pointed_by_spell:
                     continue
-
-                tmp = 0.5
-                # tmp = cls.bias + 3 + (my_minion.health + 1) / 4 + \
-                #       (my_minion.attack) / 2
-                if tmp >= best_delta_h: #right most minion gets the buff
+                tmp = 2 + my_minion.delta_h_after_buff(0,2)
+                if tmp > best_delta_h:
                     best_delta_h = tmp
                     best_mine_index = my_index
 
@@ -352,5 +349,97 @@ class PowerWordShield(SpellPointMine):
         except:
             return -9999,
 
+class Banana(SpellPointMine):
+    
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
 
+        try:
+            if state.my_minion_num == 0:
+                return -9999,
+            best_delta_h = 0
+            best_mine_index = -1
+
+            for my_index, my_minion in enumerate(state.my_minions):
+                if not my_minion.can_be_pointed_by_spell:
+                    continue
+                tmp = my_minion.delta_h_after_buff(1,1)
+                if tmp > best_delta_h:
+                    best_delta_h = tmp
+                    best_mine_index = my_index
+
+            return best_delta_h, best_mine_index
+        except:
+            return -9999,
+
+class DireWolfAlpha(MinionNoPoint):
+
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num == 0:
+            return 2.5, #worse than 1 drop better than hp
+        elif state.my_minion_num == 1:
+            return 5,
+        elif state.my_minion_num >= 2:
+            return 6, int(state.my_minion_num/2)
+
+class Argus(MinionNoPoint):
+
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num == 0:
+            return 1.9, #worse than 1 drop better than hp
+        elif state.my_minion_num == 1:
+            return 7,
+        elif state.my_minion_num >= 2:
+            return 9, int(state.my_minion_num/2)
+
+class FlameImp(MinionNoPoint):
+
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        return 5 + state.my_hero.delta_h_after_damage(3) * 0.1,
+
+class ShatteredSunCleric(MinionPointMine):
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num == 0:
+            return 2.5, #worse than 1 drop
+        
+        best_delta_h = 0
+        best_mine_index = -1
+
+        for my_index, my_minion in enumerate(state.my_minions):
+            delta_h = my_minion.delta_h_after_buff(1,1)
+            if delta_h > best_delta_h:
+                best_delta_h = delta_h
+                best_my_index = my_index
+
+        return best_delta_h + 5, state.my_minion_num, best_my_index
+
+class SoulFire(SpellPointOppo):
+    wait_time = 2
+    bias = -3
+    keep_in_hand_bool = False
+
+    @classmethod
+    def best_h_and_arg(cls, state, hand_card_index):
+        adj = 0
+        if state.my_hand_card_num >= 2:
+            adj = -3
+
+        spell_power = state.my_total_spell_power
+        damage = 4 + spell_power
+        best_delta_h = state.oppo_hero.delta_h_after_damage(damage)
+        best_oppo_index = -1
+
+        for oppo_index, oppo_minion in enumerate(state.oppo_minions):
+            if not oppo_minion.can_be_pointed_by_spell:
+                continue
+            temp_delta_h = oppo_minion.delta_h_after_damage(damage)
+            if temp_delta_h > best_delta_h:
+                best_delta_h = temp_delta_h
+                best_oppo_index = oppo_index
+
+        return best_delta_h + cls.bias + adj, best_oppo_index
 

@@ -3,7 +3,7 @@ from card.basic_card import *
 
 # 护甲商贩
 class ArmorVendor(MinionNoPoint):
-    value = 2
+    value = 4
     keep_in_hand_bool = True
 
 
@@ -23,12 +23,12 @@ class HolySmite(SpellPointOppo):
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_spell:
                 continue
-            temp_delta_h = oppo_minion.delta_h_after_damage(damage) + cls.bias ##classic dmg
+            temp_delta_h = oppo_minion.delta_h_after_damage(damage)
             if temp_delta_h > best_delta_h:
                 best_delta_h = temp_delta_h
                 best_oppo_index = oppo_index
 
-        return best_delta_h, best_oppo_index
+        return best_delta_h + cls.bias, best_oppo_index
 
 
 # 倦怠光波
@@ -48,7 +48,7 @@ class WaveOfApathy(SpellNoPoint):
 
 # 噬骨殴斗者
 class BonechewerBrawler(MinionNoPoint):
-    value = 2
+    value = 5
     keep_in_hand_bool = True
 
 
@@ -89,10 +89,9 @@ class Apotheosis(SpellPointMine):
             if not my_minion.can_be_pointed_by_spell:
                 continue
 
-            tmp = cls.bias + 3 + (my_minion.health + 2) / 4 + \
-                  (my_minion.attack + 1) / 2
+            tmp = cls.bias + 3 + my_minion.delta_h_after_buff(3,5)
             if my_minion.can_attack_minion:
-                tmp += my_minion.attack / 4
+                tmp += my_minion.attack / 2
             if tmp > best_delta_h:
                 best_delta_h = tmp
                 best_mine_index = my_index
@@ -100,10 +99,10 @@ class Apotheosis(SpellPointMine):
         return best_delta_h, best_mine_index
 
 
-# 亡首教徒
-class DeathsHeadCultist(MinionNoPoint):
-    value = 1
-    keep_in_hand_bool = True
+# # 亡首教徒
+# class DeathsHeadCultist(MinionNoPoint):
+#     value = 1
+#     keep_in_hand_bool = True
 
 
 # 噬灵疫病
@@ -130,7 +129,7 @@ class DevouringPlague(SpellNoPoint):
 
 # 狂傲的兽人
 class OverconfidentOrc(MinionNoPoint):
-    value = 3
+    value = 8
     keep_in_hand_bool = True
 
 
@@ -233,32 +232,6 @@ class AgainstAllOdds(SpellNoPoint):
                     for minion in state.my_minions
                     if minion.attack % 2 == 1]),
 
-
-# 锈骑劫匪
-class RuststeedRaider(MinionNoPoint):
-    value = 3
-    keep_in_hand_bool = False
-    # TODO: 也许我可以为突袭随从专门写一套价值评判?
-
-
-# 泰兰佛丁
-class TaelanFordring(MinionNoPoint):
-    value = 3
-    keep_in_hand_bool = False
-
-
-# 凯恩血蹄
-class CairneBloodhoof(MinionNoPoint):
-    value = 6
-    keep_in_hand_bool = False
-
-
-# 吃手手鱼
-class MutanusTheDevourer(MinionNoPoint):
-    value = 5
-    keep_in_hand_bool = False
-
-
 # 灵魂之镜
 class SoulMirror(SpellNoPoint):
     wait_time = 5
@@ -274,61 +247,53 @@ class SoulMirror(SpellNoPoint):
 
         return h_sum + cls.bias,
 
-
-# 戈霍恩之血
-class BloodOfGhuun(MinionNoPoint):
-    value = 8
-    keep_in_hand_bool = False
-
 # grave strength
 class GraveStrength(SpellNoPoint):
-    bias = -5
+    bias = -0.01
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        # if state.my_last_mana >= 6 and EVEN_DECK:
-        #     #maybe we can play some minions first, if no other cards we play it
-        #     return 0.2*state.my_minion_num,
-        bias = -5
-        try:
-            if state.my_corpses < 5:
-                multiplier = 1.5
-            else:
-                multiplier = 2.5
-            return cls.bias + state.my_minion_num*multiplier,
-        except:
-            return bias,
+        multiplier = 1
+        if state.my_corpses < 5:
+            multiplier = 1
+        elif state.my_corpses >= 5:
+            multiplier = 3
+        return cls.bias + state.my_minion_num*multiplier,
 
 # grave strength
 class MagicShell(SpellNoPoint):
+    bias = -0.01
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        bias = -3
-        try:
-            return cls.bias + state.my_minion_num*2,
-        except:
-            return bias,
+        return cls.bias + state.my_minion_num*2.5,
 
 class PlaguedGrain(SpellNoPoint):
     wait_time = 3
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        return 0.1,
+        return 0.1, #use if i have 1 mana left
 
 class TombGuardians(SpellNoPoint):
     wait_time = 3
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        try:
+        val = 4.5
+        if state.my_minion_num >= 7:
+            val = -1
+        elif state.my_minion_num == 6:
             if state.my_corpses >= 4:
-                return 3.5, #close to 6 drop
+                val = 4.5
+        elif state.my_minion_num <=5:
+            if state.my_corpses >= 4:
+                val = 12
             else:
-                return 1.5,
-        except:
-            return 1.5,
+                val = 4.5
+        if state.my_hero.health <= 10:
+            val *= 1.5
+        return val,
 
 # astalor based on 精灵弓箭手
 class Astalor(MinionPointOppo):
@@ -336,17 +301,17 @@ class Astalor(MinionPointOppo):
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
 
         if state.my_total_mana < 5:
-            return 1.5, state.my_minion_num, -1
+            return 4, state.my_minion_num, -1
         # 不能让她下去点脸, 除非对面快死了
 
-        best_h = 1 + state.oppo_hero.delta_h_after_damage(2)
+        best_h = 4 + state.oppo_hero.delta_h_after_damage(2)
         best_oppo_index = -1
 
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_minion:
                 continue
 
-            delta_h = 1 + oppo_minion.delta_h_after_damage(2) #most likely will use on turn 5
+            delta_h = 4 + oppo_minion.delta_h_after_damage(2) #most likely will use on turn 5
             if delta_h > best_h:
                 best_h = delta_h
                 best_oppo_index = oppo_index
@@ -358,32 +323,32 @@ class Astalor1(MinionNoPoint):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
             if state.my_total_mana < 8:
-                return 2.5,
+                return 7,
             else:
-                return 3.5, #5 drop with upside
+                return 12, #5 drop with upside
 
 class Astalor2(MinionNoPoint):
 
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
             if state.my_total_mana < 10:
-                return 2.6, #slightly better than 3 drop rather play 4 drop at less than 10 mana, save for later
+                return 8, #slightly better than 3 drop rather play 4 drop at less than 10 mana, save for later
             else:
-                return 10, #mega busted at 10 mana
+                return 25, #mega busted at 10 mana
 
 # Boneflinger based on 精灵弓箭手 doesnt know if undead minion died
 class BoneFlinger(MinionPointOppo):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
         # how do i check if this minion is active??
-        best_h = 1 + state.oppo_hero.delta_h_after_damage(2)
+        best_h = 5 + state.oppo_hero.delta_h_after_damage(2)
         best_oppo_index = -1
 
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_minion:
                 continue
 
-            delta_h = 1 + oppo_minion.delta_h_after_damage(2)
+            delta_h = 5 + oppo_minion.delta_h_after_damage(2)
             if delta_h > best_h:
                 best_h = delta_h
                 best_oppo_index = oppo_index
@@ -393,11 +358,15 @@ class BoneFlinger(MinionPointOppo):
 # plaguestrike
 class PlagueStrike(SpellPointOppo):
     wait_time = 2
-    # 加个bias,一是包含了消耗的水晶的代价，二是包含了消耗了手牌的代价
-    bias = -1
+    bias = 1
+    #killed off minion hval*OPPO Factor, at least 5 hval
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num >= 7:
+            bias_local = -7
+        else:
+            bias_local = cls.bias
         best_oppo_index = -1
         best_delta_h = 0
         spell_power = state.my_total_spell_power
@@ -406,7 +375,7 @@ class PlagueStrike(SpellPointOppo):
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
             if not oppo_minion.can_be_pointed_by_spell:
                 continue
-            temp_delta_h = oppo_minion.delta_h_after_damage(damage) + cls.bias ##classic dmg
+            temp_delta_h = oppo_minion.delta_h_after_damage(damage) + bias_local ##classic dmg
             if temp_delta_h > best_delta_h:
                 best_delta_h = temp_delta_h
                 best_oppo_index = oppo_index
@@ -422,7 +391,7 @@ class VrykulNecrolyte(MinionPointMine):
         best_my_index = -1
 
         for my_index, my_minion in enumerate(state.my_minions):
-            delta_h = 2.5 + 1/my_minion.heuristic_val
+            delta_h = 5 + 1/my_minion.heuristic_val
             if delta_h > best_h:
                 best_h = delta_h
                 best_my_index = my_index
@@ -431,65 +400,77 @@ class VrykulNecrolyte(MinionPointMine):
 
 class PriestDeceased(MinionNoPoint):
     #discourages play if not infused
-    value = 0.001
+    value = 0.01
 class PriestDeceasedt(MinionNoPoint):
-    value = 4 #better than the 6 drop i will run...
+    value = 13 #better than the 6 drop i will run...
+
+class NerubianSwarmguard(MinionNoPoint):
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num <= 4:
+            return 12, #standard 4 drop
+        elif state.my_minion_num == 5:
+            if state.my_hand_card_num <= 2:
+                return 12,
+            else:
+                return 4, #let's hold this card, play 2 2 drops instead
+        elif state.my_minion_num == 6:
+            return 4,
+        else:
+            return 12,
+
+class Genn(MinionNoPoint):
+    @classmethod
+    def utilize_delta_h_and_arg(cls, state, hand_card_index):
+        if state.my_minion_num == 6:
+            return 11, #i rather play astalor on 8 mana instead
+        elif state.my_hand_card_num >= 3:
+            return 4, #rather play more minions
+        else:
+            return 9, #some better 4-5 drops i will play instead,..
 
 class DarkTransformation(SpellPointMine):
 
+    bias = 10
+
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
-        try:
-            bias = 4.5
-            best_delta_h = 0
-            best_mine_index = -1
-            
-            for my_index, my_minion in enumerate(state.my_minions):
-                debug_print("i was here")
-                if not my_minion.can_be_pointed_by_spell:
-                    continue
-                if not my_minion.race == 'UNDEAD':
-                    continue
-                tmp = bias - my_minion.heuristic_val/2 #breakeven if minion is 2/3 or 3/2
+        best_delta_h = -1
+        best_mine_index = -1
+        
+        for my_index, my_minion in enumerate(state.my_minions):
+            if not my_minion.can_be_pointed_by_spell:
+                continue
+            if not my_minion.race == 'UNDEAD':
+                continue
+            tmp = cls.bias - my_minion.heuristic_val #breakeven if minion is 2/3 or 3/2
 
-                #two drop 2, three drop 2.5, four drop 3
-                if tmp >= best_delta_h: #right most minion gets the buff, more like to target hp
-                    best_delta_h = tmp
-                    best_mine_index = my_index
-
-            debug_print(f"darktransformation, best_delta_h{best_delta_h}, best_mine_index{best_mine_index}")
-
-            return best_delta_h, best_mine_index
-        except:
-            debug_print("there was an exception with darktransformation")
-            return -9999,
+            #two drop 2, three drop 2.5, four drop 3
+            if tmp >= best_delta_h: #right most minion gets the buff, more like to target hp
+                best_delta_h = tmp
+                best_mine_index = my_index
+        return best_delta_h, best_mine_index
 
 class ManaFeederHP(MinionNoPoint):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
         if state.my_hero_power.exhausted:
-            return 2.5, #equivalent to 3 drop
+            return 7, #equivalent to 3 drop
         else:
-            return 1.5, #save if there are other 2 drops
+            return 3, #save if there are other 2 drops
 
 class BoneDigger(MinionNoPoint):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        try:
-            if state.my_corpses >= 1:
-                return 2.5, #equivalent to 3 drop
-            else:
-                return 1.5,
-        except:
-            return 1.5,
+        if state.my_corpses >= 1:
+            return 7, #equivalent to 3 drop
+        else:
+            return 4,
 
 class BattlefieldNecromancer(MinionNoPoint):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
-        try:
-            if state.my_corpses >= 1:
-                return 2.51, #slightly better than 3 drop
-            else:
-                return 1.5,
-        except:
-            return 1.5,
+        if state.my_corpses >= 1:
+            return 8, #slightly better than 3 drop
+        else:
+            return 4,

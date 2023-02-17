@@ -162,6 +162,10 @@ class Entity:
     def zone(self):
         return self.query_tag("ZONE")
 
+    @property
+    def zone_pos_test(self):
+        return self.query_tag("ZONE_POSITION")
+
 
 class GameEntity(Entity):
     pass
