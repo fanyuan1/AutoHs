@@ -457,7 +457,7 @@ class ManaFeederHP(MinionNoPoint):
         if state.my_hero_power.exhausted:
             return 7, #equivalent to 3 drop
         else:
-            return 3, #save if there are other 2 drops
+            return 2, #save if there are other 2 drops
 
 class BoneDigger(MinionNoPoint):
     @classmethod
@@ -465,7 +465,7 @@ class BoneDigger(MinionNoPoint):
         if state.my_corpses >= 1:
             return 7, #equivalent to 3 drop
         else:
-            return 4,
+            return 2,
 
 class BattlefieldNecromancer(MinionNoPoint):
     @classmethod
@@ -473,4 +473,4 @@ class BattlefieldNecromancer(MinionNoPoint):
         if state.my_corpses >= 1:
             return 8, #slightly better than 3 drop
         else:
-            return 4,
+            return 2,
