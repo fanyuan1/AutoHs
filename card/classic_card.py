@@ -404,7 +404,7 @@ class ShatteredSunCleric(MinionPointMine):
     @classmethod
     def utilize_delta_h_and_arg(cls, state, hand_card_index):
         if state.my_minion_num == 0:
-            return 2.5, #worse than 1 drop
+            return 2.5, state.my_minion_num, -1 #worse than 1 drop
         
         best_delta_h = 0
         best_mine_index = -1
