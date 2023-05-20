@@ -306,7 +306,7 @@ class HolyNovaClassic(SpellNoPoint):
 class ShadowWordPain(SpellPointOppo):
 
     wait_time = 1.5
-    bias = -2
+    bias = 0
 
     @classmethod
     def best_h_and_arg(cls, state, hand_card_index):
@@ -314,7 +314,7 @@ class ShadowWordPain(SpellPointOppo):
         best_delta_h = 0
 
         for oppo_index, oppo_minion in enumerate(state.oppo_minions):
-            if oppo_minion.attack < 4:
+            if oppo_minion.attack > 3:
                 continue
             if not oppo_minion.can_be_pointed_by_spell:
                 continue
